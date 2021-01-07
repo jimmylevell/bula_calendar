@@ -6,9 +6,9 @@ import App from './components/App';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
-  <BrowserRouter>
+  <BrowserRouter basename={window.location.pathname || ''}>
     <App />
-</BrowserRouter>,
+  </BrowserRouter>,
   document.getElementById('root')
 );
 
