@@ -13,13 +13,13 @@ let todayStr = new Date().toISOString().replace(/T.*$/, '') // YYYY-MM-DD of tod
 const INITIAL_EVENTS_STANDARD = [
   {
     id: createEventId(),
-    title: 'All-day event',
-    start: todayStr, 
-    end: todayStr
+    title: 'Timed event',
+    start: todayStr + 'T09:00:00',
+    end: todayStr + 'T10:00:00'
   },
   {
     id: createEventId(),
-    title: 'Timed event',
+    title: 'Timed event 2',
     start: todayStr + 'T13:00:00',
     end: todayStr + 'T15:00:00'
   }
@@ -78,11 +78,7 @@ export default class CalendarManager extends React.Component {
     if(event.id) {
       this.state.selectInfo.event.setProp("title", event.title)
       this.state.selectInfo.event.setDates(event.start)
-      this.state.selectInfo.event.setAllDay(event.allDay)
       this.state.selectInfo.event.setEnd(event.end)
-
-      console.log(event)
-      console.log(this.state.selectInfo.event)
     } 
     else {
       event.id = createEventId()
@@ -122,13 +118,6 @@ export default class CalendarManager extends React.Component {
   }
 
   handleEvents = (events) => {
-    // when dragging an all day event to a timed event there is no end set by fullcalendar
-    // this had to be manually fixed
-    let eventsNoEnd = events.filter(event => !event.allDay && !event.end)
-    eventsNoEnd.forEach(event => {
-      event.setEnd(event._instance.range.end)
-    })
-
     this.setState({
       currentEvents: events
     })
@@ -207,6 +196,7 @@ export default class CalendarManager extends React.Component {
             }}
             themeSystem="bootstrap"
             locale="DE"
+            allDaySlot={false}  // don't allow full day event
             firstDay={1}  // set to mondy 1
             validRange={{ start: START_DATE, end: END_DATE }}
             initialView='timeGridWeek'

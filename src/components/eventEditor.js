@@ -7,9 +7,11 @@ import {
   CardActions,
   Modal,
   Button,
-  Switch,
-  FormControlLabel,
-  FormGroup
+  FormControl, 
+  InputLabel, 
+  Select,
+  MenuItem,
+  FormHelperText
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
@@ -39,17 +41,16 @@ const styles = theme => ({
   },
   marginTop: {
     marginTop: theme.spacing(2),
+  },
+  inputField: {
+    marginTop: theme.spacing(1)
   }
 });
+const places = ["Under de Brugg", "Ähned am Bergli"]
+const languages = ["German", "French", "Italian", "Schwitzerdütsch"]
 
-// function which returns either the datetime or only date based on if the event is a allday or not
-function convertDateToIso(allDay, date) {
-  if(allDay) {
-    // all day event require only the date
-    return moment(date).toISOString(true).substring(0, 10)
-  } else {
+function convertDateToIso(date) {
     return moment(date).toISOString(true).substring(0, 16)
-  }
 }
 
 class EventEditor extends Component {
@@ -59,12 +60,17 @@ class EventEditor extends Component {
       calendar: null,
 
       dateTimeSelector: "",
-      evnt: { title: "", start: "", end: "", allDay: false},
+      evnt: { title: "", 
+              start: "", 
+              end: "", 
+              allDay: false,
+              amountParticipants: 0,
+              place: "",
+              language: ""
+            },
 
       errorText: ""
     };
-
-    this.toggleAllDayEvent = this.toggleAllDayEvent.bind(this)
   }
 
   componentDidMount() {
@@ -75,60 +81,27 @@ class EventEditor extends Component {
       let event = selectInfo.event.toPlainObject()
 
       event.allDay = selectInfo.event.allDay
-      event.start = convertDateToIso(event.allDay, event.start)
-      event.end = convertDateToIso(event.allDay, event.end)
+      event.start = convertDateToIso(event.start)
+      event.end = convertDateToIso(event.end)
 
       this.setState({
         calendar: selectInfo.view.calendar,
         evnt: event,
-        dateTimeSelector: this.getDateTimeSelector(event.allDay)
+        dateTimeSelector: "datetime-local"
       })
     }
     else {
+      let event = this.state.evnt
+      event.start = convertDateToIso(selectInfo.start);
+      event.end = convertDateToIso(selectInfo.end);
+      event.allDay = selectInfo.allDay;
+
       this.setState({
         calendar: selectInfo.view.calendar,
-        evnt: {
-          title: "", 
-          start: convertDateToIso(selectInfo.allDay, selectInfo.start),
-          end: convertDateToIso(selectInfo.allDay, selectInfo.end),
-          allDay: selectInfo.allDay
-        }, 
-        dateTimeSelector: this.getDateTimeSelector(selectInfo.allDay)
+        evnt: event,
+        dateTimeSelector: "datetime-local"
       })
     }   
-  }
-
-  // return the correct input form based on if event is all day
-  getDateTimeSelector(allDayEvent) {
-    if(allDayEvent) {
-      return "date"
-    } else {
-      return "datetime-local"
-    }
-  }
-
-  // switch between time based and all day event
-  toggleAllDayEvent() {
-    let event = this.state.evnt
-
-    event.allDay = !event.allDay
-    event.start = convertDateToIso(event.allDay, event.start)
-    event.end = convertDateToIso(event.allDay, event.end)
-
-    // when changing from a all day event to a timed event you need to add +1 hour at event end
-    // otherwise new event has start and end hour 00:00 
-    let time = event.end.toString().split("T")
-    let slice = time[0].split("-")
-    if(event.allDay) {
-      event.end = slice[0] + "-" + slice[1] + "-0" + ++slice[2]
-    } else {
-      event.end = slice[0] + "-" + slice[1] + "-0" + --slice[2] + "T01:00"
-    }
-
-    this.setState({
-      dateTimeSelector: this.getDateTimeSelector(event.allDay),
-      evnt: event
-    })
   }
 
   checkIfEventsOverLap(event) {
@@ -198,25 +171,15 @@ class EventEditor extends Component {
           <form onSubmit={this.handleSubmit}>
             <CardContent className={classes.modalCardContent}>
               <TextField
-                required 
-                type="text"
-                key="inputTitle"
-                name="title"
-                placeholder="title"
-                label="Event title"
-                value={this.state.evnt.title}
-                onChange={this.handleChange}
-                variant="outlined"
-                size="small"
-              />
-              <TextField
                 key="inputStartTime"
                 name="start"
                 label="Start time"
                 type={this.state.dateTimeSelector}
                 value={this.state.evnt.start}
                 onChange={this.handleChange}
+                className={classes.inputField}
               />
+
               <TextField
                 key="inputEndTime"
                 name="end"
@@ -226,19 +189,50 @@ class EventEditor extends Component {
                 onChange={this.handleChange}
                 error ={this.state.errorText.length === 0 ? false : true }
                 helperText={this.state.errorText}
+                className={classes.inputField}
               />
-              <FormGroup aria-label="position" row>
-                <FormControlLabel
-                  value="allDay"
-                  control={<Switch 
-                      size="small" 
-                      checked={this.state.evnt.allDay} 
-                      onChange={this.toggleAllDayEvent} 
-                    />}
-                  label="AllDay Event"
-                  labelPlacement="top"
-                />
-              </FormGroup>
+
+              <TextField
+                required 
+                type="number"
+                key="inputAmountParticipants"
+                name="amountParticipants"
+                placeholder="100"
+                label="Amount Participants"
+                value={this.state.evnt.amountParticipants}
+                onChange={this.handleChange}
+                className={classes.inputField}
+              />
+      
+              <InputLabel id="labelInputPlace">Place</InputLabel>
+              <Select
+                labelId="labelInputPlace"
+                id="inputPlace"
+                value={this.state.place}
+                onChange={this.handleChange}
+                autoWidth
+              >
+                {
+                  places.map((place, i) => (
+                    <MenuItem keys={i} value={place}><em>{place}</em></MenuItem>
+                  ))
+                }
+              </Select>
+
+              <InputLabel id="labelInputLanguage">Language</InputLabel>
+              <Select
+                labelId="labelInputLanguage"
+                id="inputLanguage"
+                value={this.state.language}
+                onChange={this.handleChange}
+                autoWidth
+              >
+                {
+                  languages.map((language, i) => (
+                    <MenuItem keys={i} value={language}><em>{language}</em></MenuItem>
+                  ))
+                }
+              </Select>
             </CardContent>
             <CardActions>
               <Button size="small" color="primary" type="submit"><SaveAltIcon/>Save</Button>
