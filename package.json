@@ -1,8 +1,13 @@
 {
-  "name": "bula_calendar_component",
-  "version": "0.1.0",
-  "private": true,
+  "name": "bula_calendar_react_component",
+  "version": "1.0.0",
+  "private": false,
   "homepage": "https://levell.ch/bula-calendar/",
+  "license": "GNU General Public License v3.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jimmylevell/bula_calendar"
+  },
   "dependencies": {
     "@fullcalendar/daygrid": "^5.5.0",
     "@fullcalendar/interaction": "^5.5.0",
@@ -21,6 +26,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
     "recompose": "^0.30.0",
+    "uuid": "^8.3.2",
     "web-vitals": "^1.1.0"
   },
   "scripts": {

@@ -7,11 +7,9 @@ import {
   CardActions,
   Modal,
   Button,
-  FormControl, 
   InputLabel, 
   Select,
   MenuItem,
-  FormHelperText
 } from '@material-ui/core';
 import DeleteIcon from '@material-ui/icons/Delete';
 import SaveAltIcon from '@material-ui/icons/SaveAlt';
@@ -46,28 +44,26 @@ const styles = theme => ({
     marginTop: theme.spacing(1)
   }
 });
-const places = ["Under de Brugg", "Ähned am Bergli"]
-const languages = ["German", "French", "Italian", "Schwitzerdütsch"]
-
-function convertDateToIso(date) {
-    return moment(date).toISOString(true).substring(0, 16)
-}
+const places = ["", "Under de Brugg", "Ähned am Bergli"]
+const languages = ["", "German", "French", "Italian", "Schwitzerdütsch"]
 
 class EventEditor extends Component {
   constructor() {
     super();
+
     this.state = {
       calendar: null,
 
-      dateTimeSelector: "",
-      evnt: { title: "", 
-              start: "", 
-              end: "", 
-              allDay: false,
-              amountParticipants: 0,
-              place: "",
-              language: ""
-            },
+      evnt: { 
+          title: "", 
+          start: "", 
+          end: "", 
+          allDay: false,
+          amountParticipants: 0,
+          place: "",
+          language: "",
+          overlap: true
+      },
 
       errorText: ""
     };
@@ -76,38 +72,54 @@ class EventEditor extends Component {
   componentDidMount() {
     const { selectInfo } = this.props
     
-    // if event is passed or only select for new event
+    // check if event is passed, if not a selection has been passed for a new event
     if(selectInfo.event) {
+      // event passsed
       let event = selectInfo.event.toPlainObject()
 
       event.allDay = selectInfo.event.allDay
-      event.start = convertDateToIso(event.start)
-      event.end = convertDateToIso(event.end)
+      event.start = this.convertDateToIso(event.start)
+      event.end = this.convertDateToIso(event.end)
+      event.amountParticipants =  this.state.evnt.amountParticipants
+      event.place = this.state.evnt.place
+      event.language = this.state.evnt.language
+      event.overlap = this.state.evnt.overlap
+
+      if(event.extendedProps) {
+        event.amountParticipants = event.extendedProps.amountParticipants || 0
+        event.place = event.extendedProps.place || ""
+        event.language = event.extendedProps.language || ""
+      }
 
       this.setState({
         calendar: selectInfo.view.calendar,
-        evnt: event,
-        dateTimeSelector: "datetime-local"
+        evnt: event
       })
     }
     else {
+      // only date and time given
       let event = this.state.evnt
-      event.start = convertDateToIso(selectInfo.start);
-      event.end = convertDateToIso(selectInfo.end);
+      event.start = this.convertDateToIso(selectInfo.start);
+      event.end = this.convertDateToIso(selectInfo.end);
       event.allDay = selectInfo.allDay;
 
       this.setState({
         calendar: selectInfo.view.calendar,
-        evnt: event,
-        dateTimeSelector: "datetime-local"
+        evnt: event
       })
     }   
   }
 
+  // javascript date to the format required by fullcalendar
+  convertDateToIso(date) {
+    return moment(date).toISOString(true).substring(0, 16)
+  }
+
+  // check if the new event is overlapping with a blocked one
   checkIfEventsOverLap(event) {
-    // check if the new event is overlapping with a blocked one
     let blockingEvents = this.state.calendar.getEvents().filter(event => event.overlap === false)
     let notAllowedOverlap = false
+
     blockingEvents.forEach(blockingEvent => {
       if((new Date(event.start) > new Date(blockingEvent.start) && new Date(event.start) < new Date(blockingEvent.end)) ||
           (new Date(event.end) > new Date(blockingEvent.start) && new Date(event.end) < new Date(blockingEvent.end)))
@@ -129,8 +141,9 @@ class EventEditor extends Component {
         errorText: "Der Endzeitpunkt kann nicht hinter dem Startzeitpunkt liegen"
       })
     } else if(this.checkIfEventsOverLap(event)) {
+      // check if new event is overlapping with a blocking event
       this.setState({
-        errorText: "Der Event überlagert mit einem blockierenden Event"
+        errorText: "Der Event überlagert mit einem blockierendem Event"
       })
     } else {
       this.setState({
@@ -174,7 +187,7 @@ class EventEditor extends Component {
                 key="inputStartTime"
                 name="start"
                 label="Start time"
-                type={this.state.dateTimeSelector}
+                type="datetime-local"
                 value={this.state.evnt.start}
                 onChange={this.handleChange}
                 className={classes.inputField}
@@ -184,7 +197,7 @@ class EventEditor extends Component {
                 key="inputEndTime"
                 name="end"
                 label="End time"
-                type={this.state.dateTimeSelector}
+                type="datetime-local"
                 value={this.state.evnt.end}
                 onChange={this.handleChange}
                 error ={this.state.errorText.length === 0 ? false : true }
@@ -208,13 +221,14 @@ class EventEditor extends Component {
               <Select
                 labelId="labelInputPlace"
                 id="inputPlace"
-                value={this.state.place}
+                name="place"
+                value={this.state.evnt.place}
                 onChange={this.handleChange}
                 autoWidth
               >
                 {
                   places.map((place, i) => (
-                    <MenuItem keys={i} value={place}><em>{place}</em></MenuItem>
+                    <MenuItem key={`place-${i}`} value={place}><em>{place}</em></MenuItem>
                   ))
                 }
               </Select>
@@ -223,13 +237,14 @@ class EventEditor extends Component {
               <Select
                 labelId="labelInputLanguage"
                 id="inputLanguage"
-                value={this.state.language}
+                name="language"
+                value={this.state.evnt.language}
                 onChange={this.handleChange}
                 autoWidth
               >
                 {
                   languages.map((language, i) => (
-                    <MenuItem keys={i} value={language}><em>{language}</em></MenuItem>
+                    <MenuItem key={`lang-${i}`} value={language}><em>{language}</em></MenuItem>
                   ))
                 }
               </Select>
