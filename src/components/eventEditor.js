@@ -17,8 +17,7 @@ import ClearIcon from '@material-ui/icons/Clear';
 import CopyIcon from '@material-ui/icons/FileCopy'
 import { compose } from 'recompose';
 import { withRouter } from 'react-router-dom';
-
-import moment from 'moment';
+import { convertDateToIso } from '../utilities/utilities'
 import 'moment-timezone';
 
 const styles = theme => ({
@@ -78,8 +77,8 @@ class EventEditor extends Component {
       let event = selectInfo.event.toPlainObject()
 
       event.allDay = selectInfo.event.allDay
-      event.start = this.convertDateToIso(event.start)
-      event.end = this.convertDateToIso(event.end)
+      event.start = convertDateToIso(event.start)
+      event.end = convertDateToIso(event.end)
       event.amountParticipants =  this.state.evnt.amountParticipants
       event.place = this.state.evnt.place
       event.language = this.state.evnt.language
@@ -99,8 +98,8 @@ class EventEditor extends Component {
     else {
       // only date and time given
       let event = this.state.evnt
-      event.start = this.convertDateToIso(selectInfo.start);
-      event.end = this.convertDateToIso(selectInfo.end);
+      event.start = convertDateToIso(selectInfo.start);
+      event.end = convertDateToIso(selectInfo.end);
       event.allDay = selectInfo.allDay;
 
       this.setState({
@@ -110,20 +109,15 @@ class EventEditor extends Component {
     }   
   }
 
-  // javascript date to the format required by fullcalendar
-  convertDateToIso(date) {
-    return moment(date).toISOString(true).substring(0, 16)
-  }
-
   isEventOverlapping(event1, event2) {
     return ((new Date(event1.start) > new Date(event2.start) && new Date(event1.start) < new Date(event2.end)) ||
-          (new Date(event1.end) > new Date(event2.start) && new Date(event1.end) < new Date(event2.end))
+          (new Date(event1.end) > new Date(event2.start) && new Date(event1.end) < new Date(event2.end)))
   }
   
   // check if the new event is overlapping with a blocked one
   checkIfEventsOverLap(event) {
     let blockingEvents = this.state.calendar.getEvents().filter(event => event.overlap === false)
-    return blockingEvents.some(event => isEventOverlapping(event, blockingEvents))
+    return blockingEvents.some(event => this.isEventOverlapping(event, blockingEvents))
   }
 
   handleChange = evt => {

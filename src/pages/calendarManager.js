@@ -1,6 +1,5 @@
 import React from 'react'
 import { compose } from 'recompose';
-import { v4 as uuidv4 } from 'uuid';
 import {
   Button,
   withStyles,
@@ -10,6 +9,7 @@ import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import interactionPlugin from '@fullcalendar/interaction'
+import { createEventId } from '../utilities/utilities'
 
 import EventEditor from '../components/eventEditor'
 import InfoSnackbar from '../components/infoSnackbar';
@@ -18,8 +18,8 @@ import LoadingBar from '../components/loadingBar'
 import Help from '../components/help'
 
 // define range of calendar view
-const START_DATE = '2021-01-18'
-const END_DATE = '2021-01-31' // end date + 1
+const START_DATE = '2021-03-01'
+const END_DATE = '2021-03-10' // end date + 1
 const LOCAL = "DE"
 const todayStr = new Date().toISOString().replace(/T.*$/, '') // YYYY-MM-DD of today
 const styles = theme => ({
@@ -68,11 +68,6 @@ const INITIAL_EVENTS_BLOCKING = [
   }
 ]
 const INITIAL_EVENTS = [...INITIAL_EVENTS_STANDARD, ...INITIAL_EVENTS_BLOCKING]
-
-// function to create unique event ID
-function createEventId() {
-  return uuidv4()
-}
 
 class CalendarManager extends React.Component {
   constructor() {
@@ -246,6 +241,38 @@ class CalendarManager extends React.Component {
     )
   }
 
+  renderHelperElements() {    
+    return (
+      <div>
+        {this.state.error && (
+          /* Show error bar based on flag*/
+          <ErrorSnackbar
+            onClose={() => this.setState({ error: null })}
+            message={ this.state.error.message }
+          />
+        )}
+
+        {this.state.loading && (
+          /* Show loading based on flag*/
+          <LoadingBar/>
+        )}
+
+        {this.state.success && (
+          /* show info bar based on flag*/
+          <InfoSnackbar
+            onClose={() => this.setState({ success: null })}
+            message={ this.state.success }
+          />
+        )}
+
+        <Help 
+          handleChange={ this.handleHelpChange } 
+          showModal={ this.state.showHelp }
+        />
+      </div>
+    )
+  }
+
   render() {
     const { classes } = this.props
 
@@ -302,31 +329,7 @@ class CalendarManager extends React.Component {
           />
         </div>
 
-        {this.state.error && (
-          /* Show error bar based on flag*/
-          <ErrorSnackbar
-            onClose={() => this.setState({ error: null })}
-            message={ this.state.error.message }
-          />
-        )}
-
-        {this.state.loading && (
-          /* Show loading based on flag*/
-          <LoadingBar/>
-        )}
-
-        {this.state.success && (
-          /* show info bar based on flag*/
-          <InfoSnackbar
-            onClose={() => this.setState({ success: null })}
-            message={ this.state.success }
-          />
-        )}
-
-        <Help 
-          handleChange={ this.handleHelpChange } 
-          showModal={ this.state.showHelp }
-        />
+        { this.renderHelperElements() }
       </div>
     )
   }
