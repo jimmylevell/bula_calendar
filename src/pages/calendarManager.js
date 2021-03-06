@@ -67,7 +67,7 @@ const INITIAL_EVENTS_BLOCKING = [
     color: '#ff9f89'
   }
 ]
-const INITIAL_EVENTS = INITIAL_EVENTS_STANDARD.concat(INITIAL_EVENTS_BLOCKING)
+const INITIAL_EVENTS = [...INITIAL_EVENTS_STANDARD, ...INITIAL_EVENTS_BLOCKING]
 
 // function to create unique event ID
 function createEventId() {
@@ -106,7 +106,7 @@ class CalendarManager extends React.Component {
     let date = datetime.toLocaleDateString(LOCAL)
     let time = datetime.toLocaleTimeString(LOCAL)
   
-    return date + " " + time
+    return [date, time].join(" ")
   }
 
   handleOnClose() {
@@ -149,8 +149,7 @@ class CalendarManager extends React.Component {
 
   handleEventCopy = (event) => {
     // create a new event
-    event.id = createEventId()
-    this.state.selectInfo.view.calendar.addEvent(event)
+    this.state.selectInfo.view.calendar.addEvent({...event, id: createEventId()})
 
     this.setState({
       showEditor: false
@@ -167,7 +166,6 @@ class CalendarManager extends React.Component {
   }
 
   handleEventRemove() {
-    console.log(this.state)
     if (window.confirm(`Bist du sicher, dass du den Termin löschen möchtest von '${ this.convertToReadableTime(this.state.selectInfo.event.start) }' bis '${ this.convertToReadableTime(this.state.selectInfo.event.end) }'`)) {
       this.state.selectInfo.event.remove()
 
@@ -183,7 +181,7 @@ class CalendarManager extends React.Component {
     })
   }
 
-  handleHelpChange = (events) => {
+  handleHelpChange = () => {
     this.setState({
       showHelp: !this.state.showHelp
     })
