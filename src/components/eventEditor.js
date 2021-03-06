@@ -115,20 +115,15 @@ class EventEditor extends Component {
     return moment(date).toISOString(true).substring(0, 16)
   }
 
+  isEventOverlapping(event1, event2) {
+    return ((new Date(event1.start) > new Date(event2.start) && new Date(event1.start) < new Date(event2.end)) ||
+          (new Date(event1.end) > new Date(event2.start) && new Date(event1.end) < new Date(event2.end))
+  }
+  
   // check if the new event is overlapping with a blocked one
   checkIfEventsOverLap(event) {
     let blockingEvents = this.state.calendar.getEvents().filter(event => event.overlap === false)
-    let notAllowedOverlap = false
-
-    blockingEvents.forEach(blockingEvent => {
-      if((new Date(event.start) > new Date(blockingEvent.start) && new Date(event.start) < new Date(blockingEvent.end)) ||
-          (new Date(event.end) > new Date(blockingEvent.start) && new Date(event.end) < new Date(blockingEvent.end)))
-      {
-        notAllowedOverlap = true
-      }
-    })
-
-    return notAllowedOverlap
+    return blockingEvents.some(event => isEventOverlapping(event, blockingEvents))
   }
 
   handleChange = evt => {
